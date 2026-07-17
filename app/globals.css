@@ -73,6 +73,15 @@ select {
   cursor: pointer;
 }
 
+.inline-button {
+  min-height: 34px;
+  border: 1px solid var(--foreground);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0 10px;
+  cursor: pointer;
+}
+
 button:disabled,
 input:disabled {
   cursor: not-allowed;
@@ -476,7 +485,7 @@ input:disabled {
 
 table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1120px;
   border-collapse: collapse;
   font-size: 0.92rem;
 }
@@ -525,6 +534,46 @@ td span {
   min-height: 40px;
   display: inline-flex;
   align-items: center;
+}
+
+.explain-box {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.mini-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.explanation {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: #f8fbfa;
+  padding: 10px;
+}
+
+.explanation p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.explanation span {
+  display: inline;
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.explanation em {
+  color: var(--warning);
+  font-size: 0.78rem;
+  font-style: normal;
 }
 
 @media (max-width: 640px) {

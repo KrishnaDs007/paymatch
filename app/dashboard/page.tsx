@@ -2,6 +2,7 @@ import { DiscrepancyType, Severity } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getDashboardSummary, getDiscrepancyPage } from "@/lib/dashboard";
+import { ExplainButton } from "./ExplainButton";
 
 function formatMoney(cents: number | null | undefined, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
@@ -253,6 +254,7 @@ export default async function DashboardPage({
                 <th>Actual</th>
                 <th>Risk</th>
                 <th>Action</th>
+                <th>Explanation</th>
               </tr>
             </thead>
             <tbody>
@@ -279,6 +281,9 @@ export default async function DashboardPage({
                   <td>{formatMoney(row.actualAmountCents, row.currency ?? "USD")}</td>
                   <td>{formatMoney(row.riskCents, row.currency ?? "USD")}</td>
                   <td>{row.suggestedAction}</td>
+                  <td>
+                    <ExplainButton discrepancyId={row.id} />
+                  </td>
                 </tr>
               ))}
             </tbody>
