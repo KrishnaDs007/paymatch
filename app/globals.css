@@ -75,6 +75,7 @@ input {
 
 .home-actions a,
 .auth-form button,
+.upload-form button,
 .secondary-button {
   min-height: 44px;
   border: 1px solid var(--foreground);
@@ -86,6 +87,12 @@ input {
   justify-content: center;
   text-decoration: none;
   cursor: pointer;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .home-actions .secondary-link,
@@ -158,6 +165,21 @@ input {
   padding: 32px 0;
 }
 
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-nav a,
+.text-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--foreground);
+}
+
 .empty-state {
   border-top: 1px solid #d8d6cf;
   padding-top: 32px;
@@ -172,4 +194,63 @@ input {
 .empty-state p {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.tool-panel {
+  border-top: 1px solid #d8d6cf;
+  padding-top: 32px;
+  max-width: 720px;
+}
+
+.upload-form {
+  display: grid;
+  gap: 18px;
+}
+
+.upload-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.upload-form input {
+  width: 100%;
+  border: 1px solid #c8cdc8;
+  background: #fff;
+  color: var(--foreground);
+  padding: 12px;
+}
+
+.upload-form input[type="file"] {
+  padding: 10px;
+}
+
+.upload-form button {
+  width: fit-content;
+}
+
+.status-box {
+  margin-top: 20px;
+  border: 1px solid #d8d6cf;
+  background: #fff;
+  padding: 16px;
+}
+
+.status-box p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .auth-page,
+  .app-page,
+  .page-shell {
+    padding: 20px;
+  }
+
+  .app-header {
+    flex-direction: column;
+  }
 }
