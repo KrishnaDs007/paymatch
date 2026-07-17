@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum DiscrepancyType {
+  MISSING_PAYMENT
+  ORPHAN_PAYMENT
+  AMOUNT_MISMATCH
+  CURRENCY_MISMATCH
+  DUPLICATE_CHARGE
+  STATUS_MISMATCH
+  REFUND_PRESENT
+  REFERENCE_FORMAT_MISMATCH
+  PENDING_OR_FAILED_PAYMENT
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  batches       ImportBatch[]
+  orders        OrderRow[]
+  payments      PaymentRow[]
+  discrepancies Discrepancy[]
+}
+
+model ImportBatch {
+  id            String        @id @default(cuid())
+  userId        String
+  name          String
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        OrderRow[]
+  payments      PaymentRow[]
+  discrepancies Discrepancy[]
+
+  @@index([userId, createdAt])
+}
+
+model OrderRow {
+  id                String        @id @default(cuid())
+  batchId           String
+  userId            String
+  orderId           String
+  normalizedOrderId String
+  orderDate         DateTime?
+  customerEmail     String
+  currency          String
+  grossAmountCents  Int
+  discountCents     Int
+  netAmountCents    Int
+  status            String
+  rawData           Json
+  createdAt         DateTime      @default(now())
+  batch             ImportBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discrepancies     Discrepancy[]
+
+  @@index([batchId, normalizedOrderId])
+  @@index([userId, normalizedOrderId])
+  @@index([customerEmail])
+}
+
+model PaymentRow {
+  id                       String        @id @default(cuid())
+  batchId                  String
+  userId                   String
+  transactionRef           String
+  processedAt              DateTime?
+  orderReference           String
+  normalizedOrderReference String
+  currency                 String
+  amountCents              Int
+  feeCents                 Int
+  netSettledCents          Int
+  type                     String
+  status                   String
+  rawData                  Json
+  createdAt                DateTime      @default(now())
+  batch                    ImportBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  user                     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discrepancies            Discrepancy[]
+
+  @@index([batchId, normalizedOrderReference])
+  @@index([userId, normalizedOrderReference])
+  @@index([transactionRef])
+}
+
+model Discrepancy {
+  id                    String          @id @default(cuid())
+  batchId               String
+  userId                String
+  type                  DiscrepancyType
+  severity              Severity
+  orderId               String?
+  paymentId             String?
+  expectedAmountCents   Int?
+  actualAmountCents     Int?
+  differenceAmountCents Int?
+  currency              String?
+  summary               String
+  suggestedAction       String
+  details               Json
+  createdAt             DateTime        @default(now())
+  batch                 ImportBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order                 OrderRow?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  payment               PaymentRow?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([batchId, type])
+  @@index([batchId, severity])
+  @@index([userId, createdAt])
+}
