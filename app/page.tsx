@@ -8,6 +8,12 @@ export default function HomePage() {
           Import order and payment CSVs, run deterministic matching, and review
           the rows that need attention.
         </p>
+        <div className="home-actions">
+          <a href="/signup">Sign up</a>
+          <a href="/login" className="secondary-link">
+            Log in
+          </a>
+        </div>
       </section>
     </main>
   );
