@@ -145,33 +145,35 @@ export async function getDashboardSummary(userId: string, batchId?: string) {
     return null;
   }
 
-  const orders = await db.orderRow.findMany({
-    where: { userId, batchId: batch.id },
-    select: {
-      id: true,
-      status: true,
-      netAmountCents: true,
-    },
-  });
-  const payments = await db.paymentRow.findMany({
-    where: { userId, batchId: batch.id },
-    select: {
-      type: true,
-      status: true,
-      amountCents: true,
-    },
-  });
-  const discrepancies = await db.discrepancy.findMany({
-    where: { userId, batchId: batch.id },
-    select: {
-      type: true,
-      severity: true,
-      orderId: true,
-      expectedAmountCents: true,
-      actualAmountCents: true,
-      differenceAmountCents: true,
-    },
-  });
+  const [orders, payments, discrepancies] = await Promise.all([
+    db.orderRow.findMany({
+      where: { userId, batchId: batch.id },
+      select: {
+        id: true,
+        status: true,
+        netAmountCents: true,
+      },
+    }),
+    db.paymentRow.findMany({
+      where: { userId, batchId: batch.id },
+      select: {
+        type: true,
+        status: true,
+        amountCents: true,
+      },
+    }),
+    db.discrepancy.findMany({
+      where: { userId, batchId: batch.id },
+      select: {
+        type: true,
+        severity: true,
+        orderId: true,
+        expectedAmountCents: true,
+        actualAmountCents: true,
+        differenceAmountCents: true,
+      },
+    }),
+  ]);
 
   const disputedOrderIds = new Set(
     discrepancies
@@ -288,32 +290,34 @@ export async function getDiscrepancyPage(userId: string, requestUrl: string) {
         }
       : {}),
   };
-  const total = await db.discrepancy.count({ where });
-  const rows = await db.discrepancy.findMany({
-    where,
-    include: {
-      order: {
-        select: {
-          orderId: true,
-          customerEmail: true,
-          status: true,
-          netAmountCents: true,
+  const [total, rows] = await Promise.all([
+    db.discrepancy.count({ where }),
+    db.discrepancy.findMany({
+      where,
+      include: {
+        order: {
+          select: {
+            orderId: true,
+            customerEmail: true,
+            status: true,
+            netAmountCents: true,
+          },
+        },
+        payment: {
+          select: {
+            transactionRef: true,
+            orderReference: true,
+            status: true,
+            type: true,
+            amountCents: true,
+          },
         },
       },
-      payment: {
-        select: {
-          transactionRef: true,
-          orderReference: true,
-          status: true,
-          type: true,
-          amountCents: true,
-        },
-      },
-    },
-    orderBy: [{ severity: "asc" }, { createdAt: "asc" }],
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-  });
+      orderBy: [{ severity: "desc" }, { createdAt: "asc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
 
   return {
     batch,

@@ -113,6 +113,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
       const data = (await response.json()) as AuthResponse;
 
       if (!response.ok || data.error) {
+        setIsLoading(false);
         setMessage({
           type: "error",
           text: getErrorMessage(mode, data.error) || "Something went wrong. Please try again.",
@@ -134,9 +135,8 @@ export function AuthScreen({ mode }: AuthScreenProps) {
         router.push(data.redirectTo ?? "/login");
       }, 5000);
     } catch {
-      setMessage({ type: "error", text: "Something went wrong. Please try again." });
-    } finally {
       setIsLoading(false);
+      setMessage({ type: "error", text: "Something went wrong. Please try again." });
     }
   }
 

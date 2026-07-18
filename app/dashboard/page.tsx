@@ -52,8 +52,10 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const summary = await getDashboardSummary(user.id, params.batchId);
-  const batches = await getImportBatches(user.id);
+  const [summary, batches] = await Promise.all([
+    getDashboardSummary(user.id, params.batchId),
+    getImportBatches(user.id),
+  ]);
 
   if (!summary) {
     return (

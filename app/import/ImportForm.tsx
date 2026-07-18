@@ -132,7 +132,6 @@ export function ImportForm({
       };
 
       setResult(finalResult);
-      setStep("done");
       clearSelectedFiles();
       router.push(`/dashboard?batchId=${finalResult.batchId}`);
     } catch (caughtError) {
