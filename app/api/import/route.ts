@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { ImportError, importCsvData } from "@/lib/import-data";
+import { getMaxImportBatches } from "@/lib/import-limits";
 
 const maxFileSize = 2 * 1024 * 1024;
 const allowedTypes = new Set([
@@ -47,9 +49,22 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
+    const batchName = String(formData.get("batchName") ?? "").trim();
+    const maxImportBatches = getMaxImportBatches();
+    const batchCount = await db.importBatch.count({ where: { userId: user.id } });
+
+    if (batchName.length < 2) {
+      throw new ImportError("Batch name is required.");
+    }
+
+    if (batchCount >= maxImportBatches) {
+      throw new ImportError(
+        `You can keep up to ${maxImportBatches} import batches. Delete an older batch before uploading a new one.`,
+      );
+    }
+
     const ordersCsv = await readCsvFile(formData, "orders");
     const paymentsCsv = await readCsvFile(formData, "payments");
-    const batchName = String(formData.get("batchName") ?? "");
     const result = await importCsvData({
       userId: user.id,
       ordersCsv,

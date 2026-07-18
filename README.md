@@ -42,9 +42,10 @@ DIRECT_URL=
 SESSION_SECRET=
 OPENAI_API_KEY=
 OPENAI_MODEL=
+MAX_IMPORT_BATCHES=5
 ```
 
-`DATABASE_URL` should be the pooled database URL for the running app. `DIRECT_URL` should be the direct database URL for schema sync. `OPENAI_API_KEY` is optional for local testing because the app returns deterministic fallback explanations when the LLM call is unavailable. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
+`DATABASE_URL` should be the pooled database URL for the running app. `DIRECT_URL` should be the direct database URL for schema sync. `OPENAI_API_KEY` is optional for local testing because the app returns deterministic fallback explanations when the LLM call is unavailable. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`. `MAX_IMPORT_BATCHES` limits how many comparison histories one user can keep before deleting older records, and defaults to `5`.
 
 4. Sync the database schema:
 
@@ -71,6 +72,7 @@ Required production environment variables:
 - `SESSION_SECRET`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` optional
+- `MAX_IMPORT_BATCHES` optional, defaults to `5`
 
 Build command:
 

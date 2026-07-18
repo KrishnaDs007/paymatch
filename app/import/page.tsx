@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
+import { AppHeader } from "@/app/AppHeader";
 import { getCurrentUser } from "@/lib/auth";
+import { getImportBatches } from "@/lib/dashboard";
+import { getMaxImportBatches } from "@/lib/import-limits";
+import { BatchList } from "@/app/dashboard/BatchList";
 import { ImportForm } from "./ImportForm";
 
 export default async function ImportPage() {
@@ -9,24 +13,25 @@ export default async function ImportPage() {
     redirect("/login");
   }
 
+  const batches = await getImportBatches(user.id);
+  const maxImportBatches = getMaxImportBatches();
+
   return (
     <main className="app-page">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">Import</p>
-          <h1>CSV import</h1>
-          <p className="muted">Signed in as {user.email}</p>
-        </div>
-        <nav className="app-nav">
-          <a href="/dashboard">Dashboard</a>
-          <form action="/api/auth/logout" method="post">
-            <button type="submit" className="secondary-button">
-              Log out
-            </button>
-          </form>
-        </nav>
-      </header>
-      <ImportForm />
+      <AppHeader
+        eyebrow="Import"
+        title="CSV import"
+        subtitle="Upload orders and payments to create a reconciled batch."
+        user={user}
+        activePage="import"
+      />
+      <ImportForm
+        currentBatchCount={batches.length}
+        maxImportBatches={maxImportBatches}
+      />
+      {batches.length > 0 ? (
+        <BatchList batches={batches} activeBatchId="" />
+      ) : null}
     </main>
   );
 }

@@ -15,6 +15,7 @@ type SessionPayload = {
 export type AuthUser = {
   id: string;
   email: string;
+  fullName?: string | null;
 };
 
 type CookieResponse = {
@@ -137,7 +138,7 @@ export async function getCurrentUser() {
 
   const user = await db.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, fullName: true },
   });
 
   return user;

@@ -4,43 +4,78 @@ import {
   isValidEmail,
   isValidPassword,
   normalizeEmail,
-  setSessionCookie,
 } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-function redirectWithError(request: Request, path: string, error: string) {
-  return NextResponse.redirect(new URL(`${path}?error=${error}`, request.url), 303);
+function errorResponse(request: Request, error: string) {
+  if (wantsJson(request)) {
+    return NextResponse.json({ error }, { status: 400 });
+  }
+
+  return NextResponse.redirect(new URL("/signup", request.url), 303);
+}
+
+function wantsJson(request: Request) {
+  return request.headers.get("accept")?.includes("application/json") ?? false;
+}
+
+function isValidFullName(fullName: string) {
+  return fullName.length >= 2 && fullName.length <= 80 && !/[<>]/.test(fullName);
+}
+
+export async function GET(request: Request) {
+  return NextResponse.redirect(new URL("/signup", request.url), 303);
 }
 
 export async function POST(request: Request) {
   const formData = await request.formData();
+  const fullName = String(formData.get("fullName") ?? "").trim();
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (!isValidFullName(fullName)) {
+    return errorResponse(request, "name");
+  }
 
   if (!isValidEmail(email)) {
-    return redirectWithError(request, "/signup", "email");
+    return errorResponse(request, "email");
   }
 
   if (!isValidPassword(password)) {
-    return redirectWithError(request, "/signup", "password");
+    return errorResponse(request, "password");
+  }
+
+  if (password !== confirmPassword) {
+    return errorResponse(request, "confirm");
   }
 
   const existingUser = await db.user.findUnique({ where: { email } });
 
   if (existingUser) {
-    return redirectWithError(request, "/signup", "exists");
+    return errorResponse(request, "exists");
   }
 
-  const user = await db.user.create({
+  await db.user.create({
     data: {
+      fullName,
       email,
       passwordHash: await hashPassword(password),
     },
-    select: { id: true, email: true },
   });
-  const response = NextResponse.redirect(new URL("/dashboard", request.url), 303);
 
-  setSessionCookie(response, user);
+  if (wantsJson(request)) {
+    return NextResponse.json(
+      {
+        ok: true,
+        message: "Account created successfully. Redirecting to login...",
+        redirectTo: "/login",
+      },
+      { status: 201 },
+    );
+  }
+
+  const response = NextResponse.redirect(new URL("/login", request.url), 303);
 
   return response;
 }

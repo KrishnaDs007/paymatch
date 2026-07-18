@@ -201,7 +201,7 @@ export async function importCsvData({
   userId: string;
   ordersCsv: string;
   paymentsCsv: string;
-  batchName?: string;
+  batchName: string;
 }) {
   const orderRows = parseCsv(ordersCsv, orderColumns, "orders");
   const paymentRows = parseCsv(paymentsCsv, paymentColumns, "payments");
@@ -210,7 +210,7 @@ export async function importCsvData({
     const batch = await tx.importBatch.create({
       data: {
         userId,
-        name: batchName?.trim() || `Import ${new Date().toISOString()}`,
+        name: batchName.trim(),
       },
     });
 

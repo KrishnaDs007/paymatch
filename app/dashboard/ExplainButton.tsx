@@ -51,6 +51,13 @@ export function ExplainButton({ discrepancyId }: { discrepancyId: string }) {
 
   return (
     <div className="explain-box">
+      {isLoading ? (
+        <div className="full-page-loader" role="status" aria-live="assertive">
+          <div className="loader-ring" />
+          <p>Preparing explanation...</p>
+        </div>
+      ) : null}
+
       <button type="button" className="inline-button" onClick={explain} disabled={isLoading}>
         {isLoading ? "Explaining..." : "Explain"}
       </button>

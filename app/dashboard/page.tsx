@@ -1,8 +1,10 @@
-import { DiscrepancyType, Severity } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { AppHeader } from "@/app/AppHeader";
 import { getCurrentUser } from "@/lib/auth";
-import { getDashboardSummary, getDiscrepancyPage } from "@/lib/dashboard";
+import { getDashboardSummary, getDiscrepancyPage, getImportBatches } from "@/lib/dashboard";
+import { BatchList } from "./BatchList";
 import { ExplainButton } from "./ExplainButton";
+import { FilterForm } from "./FilterForm";
 
 function formatMoney(cents: number | null | undefined, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
@@ -51,30 +53,27 @@ export default async function DashboardPage({
   }
 
   const summary = await getDashboardSummary(user.id, params.batchId);
+  const batches = await getImportBatches(user.id);
 
   if (!summary) {
     return (
       <main className="app-page">
-        <header className="app-header">
-          <div>
-            <p className="eyebrow">Dashboard</p>
-            <h1>Revenue review</h1>
-            <p className="muted">Signed in as {user.email}</p>
-          </div>
-          <nav className="app-nav">
-            <a href="/import">Import</a>
-            <form action="/api/auth/logout" method="post">
-              <button type="submit" className="secondary-button">
-                Log out
-              </button>
-            </form>
-          </nav>
-        </header>
-        <section className="empty-state">
-          <h2>Import data first</h2>
-          <p>Upload the orders and payments CSVs to create a reconciled dashboard.</p>
-          <a href="/import" className="text-link">
-            Go to import
+        <AppHeader
+          eyebrow="Dashboard"
+          title="Revenue review"
+          subtitle="No reconciliation batch is available yet."
+          user={user}
+          activePage="dashboard"
+        />
+        <section className="empty-state empty-card">
+          <p className="eyebrow">No data yet</p>
+          <h2>Import orders and payments to build your dashboard</h2>
+          <p>
+            Upload both CSV files, run reconciliation, and this page will show metrics, risk
+            breakdowns, filters, and individual discrepancy rows.
+          </p>
+          <a href="/import" className="secondary-button">
+            Start import
           </a>
         </section>
       </main>
@@ -106,23 +105,15 @@ export default async function DashboardPage({
 
   return (
     <main className="app-page">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">Dashboard</p>
-          <h1>Revenue review</h1>
-          <p className="muted">
-            {summary.batch.name} - Signed in as {user.email}
-          </p>
-        </div>
-        <nav className="app-nav">
-          <a href="/import">Import</a>
-          <form action="/api/auth/logout" method="post">
-            <button type="submit" className="secondary-button">
-              Log out
-            </button>
-          </form>
-        </nav>
-      </header>
+      <AppHeader
+        eyebrow="Dashboard"
+        title="Revenue review"
+        subtitle={`Batch: ${summary.batch.name}`}
+        user={user}
+        activePage="dashboard"
+      />
+
+      <BatchList batches={batches} activeBatchId={summary.batch.id} />
 
       <section className="metric-grid" aria-label="Dashboard metrics">
         <div className="metric-card">
@@ -159,7 +150,11 @@ export default async function DashboardPage({
           </div>
           <div className="bar-list">
             {summary.breakdownByType.map((item) => (
-              <div className="bar-row" key={item.type}>
+              <div
+                className="bar-row"
+                key={item.type}
+                title={`${titleCase(item.type)}: ${item.count} discrepancy rows, ${formatMoney(item.riskCents)} at risk.`}
+              >
                 <div className="bar-label">
                   <span>{titleCase(item.type)}</span>
                   <strong>{item.count}</strong>
@@ -170,7 +165,12 @@ export default async function DashboardPage({
                     style={{ width: `${Math.max(6, (item.count / maxTypeCount) * 100)}%` }}
                   />
                 </div>
-                <span className="bar-risk">{formatMoney(item.riskCents)}</span>
+                <span className="bar-risk">
+                  {formatMoney(item.riskCents)}
+                  <small>
+                    {item.count} of {summary.metrics.discrepancyCount}
+                  </small>
+                </span>
               </div>
             ))}
           </div>
@@ -207,40 +207,12 @@ export default async function DashboardPage({
           </a>
         </div>
 
-        <form className="filter-form" action="/dashboard">
-          <input type="hidden" name="batchId" value={summary.batch.id} />
-          <label>
-            Search
-            <input
-              name="search"
-              defaultValue={params.search ?? ""}
-              placeholder="Order, transaction, email"
-            />
-          </label>
-          <label>
-            Type
-            <select name="type" defaultValue={params.type ?? ""}>
-              <option value="">All types</option>
-              {Object.values(DiscrepancyType).map((type) => (
-                <option key={type} value={type}>
-                  {titleCase(type)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Severity
-            <select name="severity" defaultValue={params.severity ?? ""}>
-              <option value="">All severities</option>
-              {Object.values(Severity).map((severity) => (
-                <option key={severity} value={severity}>
-                  {titleCase(severity)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit">Apply</button>
-        </form>
+        <FilterForm
+          batchId={summary.batch.id}
+          search={params.search}
+          type={params.type}
+          severity={params.severity}
+        />
 
         <div className="table-scroll">
           <table>

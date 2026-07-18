@@ -110,6 +110,34 @@ export async function getBatchForDashboard(userId: string, batchId?: string) {
   });
 }
 
+export async function getImportBatches(userId: string) {
+  const batches = await db.importBatch.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      createdAt: true,
+      _count: {
+        select: {
+          orders: true,
+          payments: true,
+          discrepancies: true,
+        },
+      },
+    },
+  });
+
+  return batches.map((batch) => ({
+    id: batch.id,
+    name: batch.name,
+    createdAt: batch.createdAt,
+    orderCount: batch._count.orders,
+    paymentCount: batch._count.payments,
+    discrepancyCount: batch._count.discrepancies,
+  }));
+}
+
 export async function getDashboardSummary(userId: string, batchId?: string) {
   const batch = await getBatchForDashboard(userId, batchId);
 
