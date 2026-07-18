@@ -4,12 +4,10 @@ PayMatch is a full-stack revenue reconciliation app. A user can sign up, import 
 
 ## Live Submission
 
-Fill these in after deployment:
-
-- GitHub repository: `[add after deployment]`
-- Live app URL: `[add after deployment]`
+- GitHub repository: [KrishnaDs007/paymatch](https://github.com/KrishnaDs007/paymatch)
+- Live app URL: [https://paymatch.vercel.app/](https://paymatch.vercel.app/)
 - Backend URL: same as the live app URL
-- Test access: users can sign up, or provide a test account here
+- Test access: signup is available from the live app
 
 ## Tech Stack
 
